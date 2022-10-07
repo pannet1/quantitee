@@ -1,6 +1,5 @@
 from datetime import datetime as dt
 import csv
-import pyotp
 import os
 import sys
 from pydantic import ValidationError
@@ -40,6 +39,8 @@ class zha:
 
         broker = self.f.get_lst_fm_yml("../confid/bypass.yaml")
         self.kite = Bypass(broker)
+        if self.f.is_file_not_2day('data/ticks.csv'):
+            os.remove('data/ticks.csv')
 
     def place_order(self, obj):
         try:
@@ -57,11 +58,6 @@ class zha:
             )
         except BaseException as err:
             self.logger.exception("send_order {}, {}".format(err, type(err)))
-
-    def get_positions(self):
-        pos = self.kite.positions()
-        self.MIS = pos["net"]
-        self.NRML = pos["day"]
 
     def close_trades(self, trade_list, script_obj, buy_or_sell):
         def fuzzy_match(fuzzy: str, match: str) -> bool:
@@ -127,15 +123,6 @@ class zha:
                 if ltp:
                     obj["ltp"] = ltp
                 cond = hab.cond()
-                """
-                ha = Heikenashi(obj)
-                ltp = ha.get_ltp()
-                if ltp:
-                    obj["ltp"] = ltp
-                if len > 1:
-                    curr_ha = ha.candle(1)
-                    cond = self.trade_cond(ha.candle(2), curr_ha)
-                """
                 # TODO
                 # pos = self.f.json_fm_file(obj['product'])
                 # self.close_trades(pos, obj, "SELL")
