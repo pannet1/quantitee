@@ -1,35 +1,26 @@
-import logging
-
-temp = "[%(asctime)s] %(levelname)s {%(pathname)s:%(lineno)d} - %(message)s]"
-logging.basicConfig(
-    filename="info.log",
-    filemode="w",
-    format=temp,
-    level=logging.DEBUG,
-    datefmt="%H:%M:%S",
-)
-from time import sleep
 from datetime import datetime as dt
 import csv
-from kiteext import KiteExt
 import pyotp
 import os
 import sys
+from pydantic import ValidationError
 
 my_path = os.path.realpath(os.path.dirname(__file__))
 rel_path = "/../include"
 sys.path.insert(0, my_path + rel_path)
+from logger import Logger
 from fileutils import Fileutils
 from utilities import Utilities
 from symbols import Symbols
 from ohlcv import Heikenashi
-from scripts import Scripts
-from pydantic import ValidationError
 from strategy import HaBreakout
+from scripts import Scripts
+from bypass import Bypass
 
 
 class zha:
     def __init__(self):
+        self.logger = Logger(20)
         self.scr_path = "scripts/"
         self.secs = -1
         self.s, self.u, self.f = Symbols(), Utilities(), Fileutils()
@@ -48,14 +39,7 @@ class zha:
                 print(e.json())
 
         broker = self.f.get_lst_fm_yml("../confid/bypass.yaml")
-        otp = pyotp.TOTP(broker["totp"])
-        pin = otp.now()
-        if len(pin) <= 5:
-            pin = f"{int(pin):06d}"
-        self.kite = KiteExt()
-        self.kite.login_with_credentials(
-            userid=broker["username"], password=broker["password"], pin=pin
-        )
+        self.kite = Bypass(broker)
 
     def place_order(self, obj):
         try:
@@ -72,7 +56,7 @@ class zha:
                 tag="algo",
             )
         except BaseException as err:
-            logging.exception("send_order {}, {}".format(err, type(err)))
+            self.logger.exception("send_order {}, {}".format(err, type(err)))
 
     def get_positions(self):
         pos = self.kite.positions()
@@ -84,20 +68,20 @@ class zha:
             if fuzzy == match:
                 return True
             first = fuzzy.split("(")
-            logging.info(f"first is { first[0] }")
+            self.logger.info(f"first is { first[0] }")
             last = fuzzy.split(")")
-            logging.info(f"last is { last[1] }")
+            self.logger.info(f"last is { last[1] }")
             flen = len(first[0])
             llen = len(last[1])
             if flen > 0 and llen > 0:
-                logging.info("trading symbol contains first and last")
+                self.logger.info("trading symbol contains first and last")
                 if (first[0] == match[0:flen]) and (last[1] == match[(llen * -1) :]):
                     return True
                 else:
-                    logging.info(
+                    self.logger.info(
                         f"match first { match[0:flen] }is not equal to {first[0] }"
                     )
-                    logging.info(
+                    self.logger.info(
                         f"last { last[1] } is not equal to { match[(llen*-1):] }"
                     )
             return False
@@ -141,9 +125,9 @@ class zha:
                 hab = HaBreakout(obj)
                 ltp = hab.ltp
                 if ltp:
-                    obj['ltp'] = ltp
+                    obj["ltp"] = ltp
                 cond = hab.cond()
-                '''
+                """
                 ha = Heikenashi(obj)
                 ltp = ha.get_ltp()
                 if ltp:
@@ -151,7 +135,7 @@ class zha:
                 if len > 1:
                     curr_ha = ha.candle(1)
                     cond = self.trade_cond(ha.candle(2), curr_ha)
-                '''
+                """
                 # TODO
                 # pos = self.f.json_fm_file(obj['product'])
                 # self.close_trades(pos, obj, "SELL")
