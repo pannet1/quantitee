@@ -21,6 +21,7 @@ class zha:
     def __init__(self):
         self.logger = Logger(20)
         self.scr_path = "scripts/"
+        self.tick_file = "data/ticks.csv"
         self.secs = -1
         self.s, self.u, self.f = Symbols(), Utilities(), Fileutils()
         self.exchsym, self.objs = [], []
@@ -32,6 +33,7 @@ class zha:
                 Scripts(**obj)
                 obj["trade_cond"] = ""
                 self.objs.append(obj)
+                # unique symbols
                 if obj["base_script"] not in self.exchsym:
                     self.exchsym.append(obj["base_script"])
             except ValidationError as e:
@@ -39,8 +41,8 @@ class zha:
 
         broker = self.f.get_lst_fm_yml("../confid/bypass.yaml")
         self.kite = Bypass(broker)
-        if self.f.is_file_not_2day('data/ticks.csv'):
-            os.remove('data/ticks.csv')
+        if self.f.is_file_not_2day(self.tick_file):
+            os.remove(self.tick_file)
 
     def place_order(self, obj):
         try:
@@ -112,7 +114,7 @@ class zha:
             for k, v in resp.items():
                 compo = k.split(":")
                 row = dt.now(), compo[1], v["last_price"]
-                with open("data/ticks.csv", "a") as f:
+                with open(self.tick_file, "a") as f:
                     writer = csv.writer(f)
                     writer.writerow(row)
 
