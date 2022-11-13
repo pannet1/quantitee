@@ -5,7 +5,7 @@ import sys
 from pydantic import ValidationError
 
 my_path = os.path.realpath(os.path.dirname(__file__))
-rel_path = "/../include"
+rel_path = "/../../toolkit"
 sys.path.insert(0, my_path + rel_path)
 from logger import Logger
 from fileutils import Fileutils
@@ -39,7 +39,7 @@ class zha:
             except ValidationError as e:
                 print(e.json())
 
-        broker = self.f.get_lst_fm_yml("../confid/bypass.yaml")
+        broker = self.f.get_lst_fm_yml("../../confid/bypass.yaml")
         self.kite = Bypass(broker)
         if self.f.is_file_not_2day(self.tick_file):
             os.remove(self.tick_file)
