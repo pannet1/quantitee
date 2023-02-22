@@ -1,20 +1,16 @@
 from datetime import datetime as dt
 import csv
 import os
-import sys
 from pydantic import ValidationError
 
-my_path = os.path.realpath(os.path.dirname(__file__))
-rel_path = "/../../toolkit"
-sys.path.insert(0, my_path + rel_path)
-from logger import Logger
-from fileutils import Fileutils
-from utilities import Utilities
-from symbols import Symbols
-from ohlcv import Heikenashi
-from strategy import HaBreakout
-from scripts import Scripts
-from bypass import Bypass
+from toolkit.logger import Logger
+from toolkit.fileutils import Fileutils
+from toolkit.utilities import Utilities
+from toolkit.symbols import Symbols
+from toolkit.ohlcv import Heikenashi
+from toolkit.strategy import HaBreakout
+from toolkit.scripts import Scripts
+from kiteext.kiteext import KiteExt
 
 
 class zha:
@@ -40,7 +36,7 @@ class zha:
                 print(e.json())
 
         broker = self.f.get_lst_fm_yml("../../confid/bypass.yaml")
-        self.kite = Bypass(broker)
+        self.kite = KiteExt(broker)
         if self.f.is_file_not_2day(self.tick_file):
             os.remove(self.tick_file)
 
